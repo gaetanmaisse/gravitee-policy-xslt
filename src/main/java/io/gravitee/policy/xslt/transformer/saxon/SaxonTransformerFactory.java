@@ -19,7 +19,7 @@ import javax.xml.XMLConstants;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
-import net.sf.saxon.TransformerFactoryImpl;;
+import net.sf.saxon.TransformerFactoryImpl;
 
 /**
  * @author David BRASSELY (david.brassely at graviteesource.com)
@@ -28,18 +28,16 @@ import net.sf.saxon.TransformerFactoryImpl;;
 public class SaxonTransformerFactory extends TransformerFactoryImpl {
 
     @Override
-    public Transformer newTransformer(Source arg0)
-            throws TransformerConfigurationException {
-        this.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING,true);
-        Transformer t=super.newTransformer(arg0);
+    public Transformer newTransformer(Source arg0) throws TransformerConfigurationException {
+        this.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+        Transformer t = super.newTransformer(arg0);
         return t;
     }
 
     @Override
-    public Transformer newTransformer()
-            throws TransformerConfigurationException {
-        this.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING,true);
-        Transformer t=super.newTransformer();
+    public Transformer newTransformer() throws TransformerConfigurationException {
+        this.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+        Transformer t = super.newTransformer();
         return t;
     }
 }

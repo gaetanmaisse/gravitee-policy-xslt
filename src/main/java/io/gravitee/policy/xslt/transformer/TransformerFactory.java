@@ -17,16 +17,15 @@ package io.gravitee.policy.xslt.transformer;
 
 import io.gravitee.policy.xslt.transformer.saxon.SaxonTransformerFactory;
 import io.gravitee.policy.xslt.utils.Sha1;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import java.io.StringReader;
+import java.util.HashMap;
+import java.util.Map;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Templates;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.stream.StreamSource;
-import java.io.StringReader;
-import java.util.HashMap;
-import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author David BRASSELY (david.brassely at graviteesource.com)
@@ -65,6 +64,8 @@ public final class TransformerFactory {
 
     private javax.xml.transform.TransformerFactory getTransformerFactory() {
         return javax.xml.transform.TransformerFactory.newInstance(
-                SaxonTransformerFactory.class.getName(), this.getClass().getClassLoader());
+            SaxonTransformerFactory.class.getName(),
+            this.getClass().getClassLoader()
+        );
     }
 }

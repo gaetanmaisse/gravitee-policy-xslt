@@ -15,12 +15,18 @@
  */
 package io.gravitee.policy.xslt;
 
+import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
+
 import io.gravitee.el.TemplateContext;
 import io.gravitee.el.TemplateEngine;
 import io.gravitee.gateway.api.ExecutionContext;
 import io.gravitee.gateway.api.buffer.Buffer;
 import io.gravitee.gateway.api.stream.exception.TransformationException;
 import io.gravitee.policy.xslt.configuration.XSLTTransformationPolicyConfiguration;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Before;
@@ -30,13 +36,6 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.xmlunit.builder.DiffBuilder;
 import org.xmlunit.diff.Diff;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
-
-import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
 /**
  * @author David BRASSELY (david at gravitee.io)

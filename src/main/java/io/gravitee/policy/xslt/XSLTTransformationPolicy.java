@@ -29,22 +29,21 @@ import io.gravitee.policy.api.annotations.OnResponseContent;
 import io.gravitee.policy.xslt.configuration.PolicyScope;
 import io.gravitee.policy.xslt.configuration.XSLTTransformationPolicyConfiguration;
 import io.gravitee.policy.xslt.transformer.TransformerFactory;
-import org.xml.sax.EntityResolver;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
-
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.function.Function;
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.Result;
 import javax.xml.transform.Templates;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.function.Function;
+import org.xml.sax.EntityResolver;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
 
 /**
  * @author David BRASSELY (david.brassely at graviteesource.com)
@@ -63,12 +62,15 @@ public class XSLTTransformationPolicy {
 
     @OnResponseContent
     public ReadWriteStream onResponseContent(Response response, ExecutionContext executionContext) {
-        if (xsltTransformationPolicyConfiguration.getScope() == null || xsltTransformationPolicyConfiguration.getScope() == PolicyScope.RESPONSE) {
+        if (
+            xsltTransformationPolicyConfiguration.getScope() == null ||
+            xsltTransformationPolicyConfiguration.getScope() == PolicyScope.RESPONSE
+        ) {
             return TransformableResponseStreamBuilder
-                    .on(response)
-                    .contentType(MediaType.APPLICATION_XML)
-                    .transform(toXSLT(executionContext))
-                    .build();
+                .on(response)
+                .contentType(MediaType.APPLICATION_XML)
+                .transform(toXSLT(executionContext))
+                .build();
         }
 
         return null;
@@ -78,10 +80,10 @@ public class XSLTTransformationPolicy {
     public ReadWriteStream onRequestContent(Request request, ExecutionContext executionContext) {
         if (xsltTransformationPolicyConfiguration.getScope() == PolicyScope.REQUEST) {
             return TransformableRequestStreamBuilder
-                    .on(request)
-                    .contentType(MediaType.APPLICATION_XML)
-                    .transform(toXSLT(executionContext))
-                    .build();
+                .on(request)
+                .contentType(MediaType.APPLICATION_XML)
+                .transform(toXSLT(executionContext))
+                .build();
         }
 
         return null;
@@ -91,8 +93,7 @@ public class XSLTTransformationPolicy {
         return input -> {
             try {
                 // Get XSL stylesheet and transform it using internal template engine
-                String stylesheet = executionContext.getTemplateEngine()
-                        .convert(xsltTransformationPolicyConfiguration.getStylesheet());
+                String stylesheet = executionContext.getTemplateEngine().convert(xsltTransformationPolicyConfiguration.getStylesheet());
 
                 Templates template = TransformerFactory.getInstance().getTemplate(stylesheet);
 
@@ -111,17 +112,20 @@ public class XSLTTransformationPolicy {
 
                 // Add parameters
                 if (xsltTransformationPolicyConfiguration.getParameters() != null) {
-                    xsltTransformationPolicyConfiguration.getParameters().forEach(
-                            parameter -> {
-                                if (parameter.getName() != null && ! parameter.getName().trim().isEmpty()) {
-                                    // Apply SpEL conversion
-                                    String extValue = (parameter.getValue() != null) ? executionContext.getTemplateEngine().getValue(parameter.getValue(), String.class) : null;
-                                    if (extValue != null) {
-                                        parameter.setValue(extValue.toString());
-                                    }
-                                    transformer.setParameter(parameter.getName(), parameter.getValue());
+                    xsltTransformationPolicyConfiguration
+                        .getParameters()
+                        .forEach(parameter -> {
+                            if (parameter.getName() != null && !parameter.getName().trim().isEmpty()) {
+                                // Apply SpEL conversion
+                                String extValue = (parameter.getValue() != null)
+                                    ? executionContext.getTemplateEngine().getValue(parameter.getValue(), String.class)
+                                    : null;
+                                if (extValue != null) {
+                                    parameter.setValue(extValue.toString());
                                 }
-                            });
+                                transformer.setParameter(parameter.getName(), parameter.getValue());
+                            }
+                        });
                 }
 
                 transformer.transform(saxSource, result);
@@ -133,9 +137,9 @@ public class XSLTTransformationPolicy {
     }
 
     class CustomResolver implements EntityResolver {
-        public InputSource resolveEntity(String publicId, String systemId)
-                throws SAXException, IOException {
-                return new InputSource(); // Do not allow unknown entities, by returning blank path
+
+        public InputSource resolveEntity(String publicId, String systemId) throws SAXException, IOException {
+            return new InputSource(); // Do not allow unknown entities, by returning blank path
         }
     }
 }

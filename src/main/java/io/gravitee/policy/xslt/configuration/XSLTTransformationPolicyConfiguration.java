@@ -16,7 +16,6 @@
 package io.gravitee.policy.xslt.configuration;
 
 import io.gravitee.policy.api.PolicyConfiguration;
-
 import java.util.ArrayList;
 import java.util.List;
 
