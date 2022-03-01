@@ -24,6 +24,7 @@ import io.gravitee.gateway.api.http.stream.TransformableRequestStreamBuilder;
 import io.gravitee.gateway.api.http.stream.TransformableResponseStreamBuilder;
 import io.gravitee.gateway.api.stream.ReadWriteStream;
 import io.gravitee.gateway.api.stream.exception.TransformationException;
+import io.gravitee.policy.api.PolicyChain;
 import io.gravitee.policy.api.annotations.OnRequestContent;
 import io.gravitee.policy.api.annotations.OnResponseContent;
 import io.gravitee.policy.xslt.configuration.PolicyScope;
@@ -61,13 +62,14 @@ public class XSLTTransformationPolicy {
     }
 
     @OnResponseContent
-    public ReadWriteStream onResponseContent(Response response, ExecutionContext executionContext) {
+    public ReadWriteStream onResponseContent(Response response, PolicyChain chain, ExecutionContext executionContext) {
         if (
             xsltTransformationPolicyConfiguration.getScope() == null ||
             xsltTransformationPolicyConfiguration.getScope() == PolicyScope.RESPONSE
         ) {
             return TransformableResponseStreamBuilder
                 .on(response)
+                .chain(chain)
                 .contentType(MediaType.APPLICATION_XML)
                 .transform(toXSLT(executionContext))
                 .build();
@@ -77,10 +79,11 @@ public class XSLTTransformationPolicy {
     }
 
     @OnRequestContent
-    public ReadWriteStream onRequestContent(Request request, ExecutionContext executionContext) {
+    public ReadWriteStream onRequestContent(Request request, PolicyChain chain, ExecutionContext executionContext) {
         if (xsltTransformationPolicyConfiguration.getScope() == PolicyScope.REQUEST) {
             return TransformableRequestStreamBuilder
                 .on(request)
+                .chain(chain)
                 .contentType(MediaType.APPLICATION_XML)
                 .transform(toXSLT(executionContext))
                 .build();

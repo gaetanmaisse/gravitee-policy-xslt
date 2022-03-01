@@ -15,6 +15,8 @@
  */
 package io.gravitee.policy.xslt;
 
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -25,15 +27,19 @@ import io.gravitee.gateway.api.buffer.Buffer;
 import io.gravitee.gateway.api.stream.exception.TransformationException;
 import io.gravitee.policy.xslt.configuration.XSLTTransformationPolicyConfiguration;
 import java.io.IOException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.io.StringWriter;
 import org.apache.commons.io.IOUtils;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.xmlunit.builder.DiffBuilder;
 import org.xmlunit.diff.Diff;
 
@@ -41,25 +47,24 @@ import org.xmlunit.diff.Diff;
  * @author David BRASSELY (david at gravitee.io)
  * @author GraviteeSource Team
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class XSLTTransformationPolicyTest {
-
-    @Mock
-    private XSLTTransformationPolicyConfiguration xsltTransformationPolicyConfiguration;
 
     private XSLTTransformationPolicy xsltTransformationPolicy;
 
     @Mock
+    private XSLTTransformationPolicyConfiguration xsltTransformationPolicyConfiguration;
+
+    @Mock
     protected ExecutionContext executionContext;
 
-    @Before
+    @BeforeEach
     public void init() {
-        initMocks(this);
-
         xsltTransformationPolicy = new XSLTTransformationPolicy(xsltTransformationPolicyConfiguration);
     }
 
     @Test
+    @DisplayName("Should transform input")
     public void shouldTransformInput() throws Exception {
         String stylesheet = loadResource("/io/gravitee/policy/xslt/stylesheet.xsl");
         String xml = loadResource("/io/gravitee/policy/xslt/file01.xml");
@@ -70,13 +75,14 @@ public class XSLTTransformationPolicyTest {
         when(executionContext.getTemplateEngine()).thenReturn(new MockTemplateEngine());
 
         Buffer ret = xsltTransformationPolicy.toXSLT(executionContext).apply(Buffer.buffer(xml));
-        Assert.assertNotNull(ret);
+        assertThat(ret).isNotNull();
 
         Diff diff = DiffBuilder.compare(expected).ignoreWhitespace().withTest(ret.toString()).checkForIdentical().build();
-        Assert.assertFalse("XML identical " + diff.toString(), diff.hasDifferences());
+        assertThat(diff.hasDifferences()).withFailMessage("XML identical %s", diff.toString()).isFalse();
     }
 
-    @Test(expected = TransformationException.class)
+    @Test
+    @DisplayName("Should throw exception when stylesheet is invalid")
     public void shouldThrowExceptionForInvalidStylesheet() throws Exception {
         String stylesheet = loadResource("/io/gravitee/policy/xslt/stylesheet_invalid.xsl");
         String xml = loadResource("/io/gravitee/policy/xslt/file01.xml");
@@ -85,10 +91,14 @@ public class XSLTTransformationPolicyTest {
         when(xsltTransformationPolicyConfiguration.getStylesheet()).thenReturn(stylesheet);
         when(executionContext.getTemplateEngine()).thenReturn(new MockTemplateEngine());
 
-        xsltTransformationPolicy.toXSLT(executionContext).apply(Buffer.buffer(xml));
+        Assertions.assertThrows(
+            TransformationException.class,
+            () -> xsltTransformationPolicy.toXSLT(executionContext).apply(Buffer.buffer(xml))
+        );
     }
 
-    @Test(expected = TransformationException.class)
+    @Test
+    @DisplayName("Should throw exception when external entity injection")
     public void shouldThrowExceptionForExternalEntityInjection() throws Exception {
         String stylesheet = loadResource("/io/gravitee/policy/xslt/stylesheet.xsl");
         String xml = loadResource("/io/gravitee/policy/xslt/file02.xml");
@@ -97,7 +107,10 @@ public class XSLTTransformationPolicyTest {
         when(xsltTransformationPolicyConfiguration.getStylesheet()).thenReturn(stylesheet);
         when(executionContext.getTemplateEngine()).thenReturn(new MockTemplateEngine());
 
-        xsltTransformationPolicy.toXSLT(executionContext).apply(Buffer.buffer(xml));
+        Assertions.assertThrows(
+            TransformationException.class,
+            () -> xsltTransformationPolicy.toXSLT(executionContext).apply(Buffer.buffer(xml))
+        );
     }
 
     private String loadResource(String resource) throws IOException {
