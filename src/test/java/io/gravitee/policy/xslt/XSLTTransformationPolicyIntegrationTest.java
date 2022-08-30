@@ -15,8 +15,11 @@
  */
 package io.gravitee.policy.xslt;
 
+import static java.util.Collections.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.AdditionalAnswers.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -25,28 +28,30 @@ import io.gravitee.common.http.HttpHeaders;
 import io.gravitee.common.http.MediaType;
 import io.gravitee.el.TemplateContext;
 import io.gravitee.el.TemplateEngine;
+import io.gravitee.el.spel.SpelTemplateEngine;
 import io.gravitee.gateway.api.ExecutionContext;
 import io.gravitee.gateway.api.Request;
 import io.gravitee.gateway.api.Response;
 import io.gravitee.gateway.api.buffer.Buffer;
 import io.gravitee.gateway.api.stream.ReadWriteStream;
-import io.gravitee.gateway.api.stream.exception.TransformationException;
 import io.gravitee.policy.api.PolicyChain;
 import io.gravitee.policy.xslt.configuration.PolicyScope;
+import io.gravitee.policy.xslt.configuration.XSLTParameter;
 import io.gravitee.policy.xslt.configuration.XSLTTransformationPolicyConfiguration;
 import io.gravitee.reporter.api.http.Metrics;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.time.Instant;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import org.apache.commons.io.IOUtils;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.Spy;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.xmlunit.builder.DiffBuilder;
 import org.xmlunit.diff.Diff;
@@ -75,16 +80,20 @@ public class XSLTTransformationPolicyIntegrationTest {
     @Spy
     private Response response;
 
+    private TemplateEngine templateEngine;
+
     @BeforeEach
     public void init() {
         xsltTransformationPolicy = new XSLTTransformationPolicy(xsltTransformationPolicyConfiguration);
-        when(executionContext.getTemplateEngine()).thenReturn(new MockTemplateEngine());
+        templateEngine = mock(SpelTemplateEngine.class);
+        when(templateEngine.convert(any())).thenAnswer(returnsFirstArg());
+        when(executionContext.getTemplateEngine()).thenReturn(templateEngine);
     }
 
     @Test
     @DisplayName("Should transform and add header OnRequestContent")
     public void shouldTransformAndAddHeadersOnRequestContent() throws Exception {
-        String stylesheet = loadResource("/io/gravitee/policy/xslt/stylesheet.xsl");
+        String stylesheet = loadResource("/io/gravitee/policy/xslt/stylesheet01.xsl");
         String xml = loadResource("/io/gravitee/policy/xslt/file01.xml");
         String expected = loadResource("/io/gravitee/policy/xslt/output01.xml");
 
@@ -136,7 +145,7 @@ public class XSLTTransformationPolicyIntegrationTest {
     @Test
     @DisplayName("Should transform and add header OnResponseContent")
     public void shouldTransformAndAddHeadersOnResponseContent() throws Exception {
-        String stylesheet = loadResource("/io/gravitee/policy/xslt/stylesheet.xsl");
+        String stylesheet = loadResource("/io/gravitee/policy/xslt/stylesheet01.xsl");
         String xml = loadResource("/io/gravitee/policy/xslt/file01.xml");
         String expected = loadResource("/io/gravitee/policy/xslt/output01.xml");
 
@@ -193,23 +202,5 @@ public class XSLTTransformationPolicyIntegrationTest {
     private void assertResultingJsonObjectsAreEquals(String expected, Object resultBody) {
         Diff diff = DiffBuilder.compare(expected).ignoreWhitespace().withTest(resultBody.toString()).checkForIdentical().build();
         assertThat(diff.hasDifferences()).withFailMessage("XML identical %s", diff.toString()).isFalse();
-    }
-
-    private class MockTemplateEngine implements TemplateEngine {
-
-        @Override
-        public String convert(String s) {
-            return s;
-        }
-
-        @Override
-        public <T> T getValue(String expression, Class<T> clazz) {
-            return null;
-        }
-
-        @Override
-        public TemplateContext getTemplateContext() {
-            return null;
-        }
     }
 }
