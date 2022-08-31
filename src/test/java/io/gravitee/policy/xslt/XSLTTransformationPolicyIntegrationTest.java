@@ -15,43 +15,38 @@
  */
 package io.gravitee.policy.xslt;
 
-import static java.util.Collections.*;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.AdditionalAnswers.*;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.gravitee.common.http.HttpHeaders;
 import io.gravitee.common.http.MediaType;
-import io.gravitee.el.TemplateContext;
 import io.gravitee.el.TemplateEngine;
 import io.gravitee.el.spel.SpelTemplateEngine;
 import io.gravitee.gateway.api.ExecutionContext;
 import io.gravitee.gateway.api.Request;
 import io.gravitee.gateway.api.Response;
 import io.gravitee.gateway.api.buffer.Buffer;
+import io.gravitee.gateway.api.http.HttpHeaders;
 import io.gravitee.gateway.api.stream.ReadWriteStream;
 import io.gravitee.policy.api.PolicyChain;
 import io.gravitee.policy.xslt.configuration.PolicyScope;
-import io.gravitee.policy.xslt.configuration.XSLTParameter;
 import io.gravitee.policy.xslt.configuration.XSLTTransformationPolicyConfiguration;
 import io.gravitee.reporter.api.http.Metrics;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.time.Instant;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
+import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.xmlunit.builder.DiffBuilder;
 import org.xmlunit.diff.Diff;
@@ -61,11 +56,10 @@ import org.xmlunit.diff.Diff;
  * @author GraviteeSource Team
  */
 @ExtendWith(MockitoExtension.class)
-public class XSLTTransformationPolicyIntegrationTest {
+class XSLTTransformationPolicyIntegrationTest {
 
     private XSLTTransformationPolicy xsltTransformationPolicy;
 
-    @Mock
     private XSLTTransformationPolicyConfiguration xsltTransformationPolicyConfiguration;
 
     @Mock
@@ -84,6 +78,7 @@ public class XSLTTransformationPolicyIntegrationTest {
 
     @BeforeEach
     public void init() {
+        xsltTransformationPolicyConfiguration = new XSLTTransformationPolicyConfiguration();
         xsltTransformationPolicy = new XSLTTransformationPolicy(xsltTransformationPolicyConfiguration);
         templateEngine = mock(SpelTemplateEngine.class);
         when(templateEngine.convert(any())).thenAnswer(returnsFirstArg());
@@ -92,17 +87,17 @@ public class XSLTTransformationPolicyIntegrationTest {
 
     @Test
     @DisplayName("Should transform and add header OnRequestContent")
-    public void shouldTransformAndAddHeadersOnRequestContent() throws Exception {
+    void shouldTransformAndAddHeadersOnRequestContent() throws Exception {
         String stylesheet = loadResource("/io/gravitee/policy/xslt/stylesheet01.xsl");
         String xml = loadResource("/io/gravitee/policy/xslt/file01.xml");
         String expected = loadResource("/io/gravitee/policy/xslt/output01.xml");
 
         // Prepare context
-        when(xsltTransformationPolicyConfiguration.getStylesheet()).thenReturn(stylesheet);
-        when(xsltTransformationPolicyConfiguration.getScope()).thenReturn(PolicyScope.REQUEST);
-        when(request.headers()).thenReturn(new HttpHeaders());
+        xsltTransformationPolicyConfiguration.setStylesheet(stylesheet);
+        xsltTransformationPolicyConfiguration.setScope(PolicyScope.REQUEST);
+        when(request.headers()).thenReturn(HttpHeaders.create());
 
-        final ReadWriteStream result = xsltTransformationPolicy.onRequestContent(request, policyChain, executionContext);
+        final ReadWriteStream<Buffer> result = xsltTransformationPolicy.onRequestContent(request, policyChain, executionContext);
         assertThat(result).isNotNull();
         result.bodyHandler(resultBody -> {
             assertResultingJsonObjectsAreEquals(expected, resultBody);
@@ -111,50 +106,52 @@ public class XSLTTransformationPolicyIntegrationTest {
         result.write(Buffer.buffer(xml));
         result.end();
 
-        assertThat(request.headers()).containsKey(HttpHeaders.CONTENT_TYPE);
-        assertThat(request.headers().get(HttpHeaders.CONTENT_TYPE).get(0)).isEqualTo(MediaType.APPLICATION_XML);
-        assertThat(request.headers()).doesNotContainKey(HttpHeaders.TRANSFER_ENCODING);
-        assertThat(request.headers()).containsKey(HttpHeaders.CONTENT_LENGTH);
+        HttpHeaders headers = request.headers();
+        assertThat(headers.contains(io.gravitee.common.http.HttpHeaders.CONTENT_TYPE)).isTrue();
+        assertThat(headers.get(io.gravitee.common.http.HttpHeaders.CONTENT_TYPE)).isEqualTo(MediaType.APPLICATION_XML);
+        assertThat(headers.contains(io.gravitee.common.http.HttpHeaders.TRANSFER_ENCODING)).isFalse();
+        assertThat(headers.contains(io.gravitee.common.http.HttpHeaders.CONTENT_LENGTH)).isTrue();
     }
 
     @Test
     @DisplayName("Should not transform when TransformationException thrown OnRequestContent")
-    public void shouldNotTransformAndAddHeadersOnRequestContent() throws Exception {
+    void shouldNotTransformAndAddHeadersOnRequestContent() throws Exception {
         String stylesheet = loadResource("/io/gravitee/policy/xslt/stylesheet_invalid.xsl");
         String xml = loadResource("/io/gravitee/policy/xslt/file01.xml");
 
         // Prepare context
-        when(xsltTransformationPolicyConfiguration.getStylesheet()).thenReturn(stylesheet);
-        when(xsltTransformationPolicyConfiguration.getScope()).thenReturn(PolicyScope.REQUEST);
-        when(request.headers()).thenReturn(new HttpHeaders());
+        xsltTransformationPolicyConfiguration.setStylesheet(stylesheet);
+        xsltTransformationPolicyConfiguration.setScope(PolicyScope.REQUEST);
+        when(request.headers()).thenReturn(HttpHeaders.create());
         when(request.metrics()).thenReturn(Metrics.on(Instant.now().toEpochMilli()).build());
 
-        final ReadWriteStream result = xsltTransformationPolicy.onRequestContent(request, policyChain, executionContext);
+        final ReadWriteStream<Buffer> result = xsltTransformationPolicy.onRequestContent(request, policyChain, executionContext);
         assertThat(result).isNotNull();
 
         result.write(Buffer.buffer(xml));
         result.end();
 
-        assertThat(request.headers()).doesNotContainKey(HttpHeaders.CONTENT_TYPE);
-        assertThat(request.headers()).doesNotContainKey(HttpHeaders.TRANSFER_ENCODING);
-        assertThat(request.headers()).doesNotContainKey(HttpHeaders.CONTENT_LENGTH);
+        HttpHeaders headers = request.headers();
+        assertThat(headers.contains(io.gravitee.common.http.HttpHeaders.CONTENT_TYPE)).isFalse();
+        assertThat(headers.contains(io.gravitee.common.http.HttpHeaders.TRANSFER_ENCODING)).isFalse();
+        assertThat(headers.contains(io.gravitee.common.http.HttpHeaders.CONTENT_LENGTH)).isFalse();
         assertThat(request.metrics().getMessage()).contains("Unable to apply XSL Transformation:");
         verify(policyChain, times(1)).streamFailWith(any());
     }
 
     @Test
     @DisplayName("Should transform and add header OnResponseContent")
-    public void shouldTransformAndAddHeadersOnResponseContent() throws Exception {
+    void shouldTransformAndAddHeadersOnResponseContent() throws Exception {
         String stylesheet = loadResource("/io/gravitee/policy/xslt/stylesheet01.xsl");
         String xml = loadResource("/io/gravitee/policy/xslt/file01.xml");
         String expected = loadResource("/io/gravitee/policy/xslt/output01.xml");
 
         // Prepare context
-        when(xsltTransformationPolicyConfiguration.getStylesheet()).thenReturn(stylesheet);
-        when(xsltTransformationPolicyConfiguration.getScope()).thenReturn(PolicyScope.RESPONSE);
-        when(response.headers()).thenReturn(new HttpHeaders());
+        xsltTransformationPolicyConfiguration.setStylesheet(stylesheet);
+        xsltTransformationPolicyConfiguration.setScope(PolicyScope.RESPONSE);
+        when(response.headers()).thenReturn(HttpHeaders.create());
 
-        final ReadWriteStream result = xsltTransformationPolicy.onResponseContent(response, policyChain, executionContext);
+        final ReadWriteStream<Buffer> result = xsltTransformationPolicy.onResponseContent(response, policyChain, executionContext);
         assertThat(result).isNotNull();
         result.bodyHandler(resultBody -> {
             assertResultingJsonObjectsAreEquals(expected, resultBody);
@@ -163,32 +160,34 @@ public class XSLTTransformationPolicyIntegrationTest {
         result.write(Buffer.buffer(xml));
         result.end();
 
-        assertThat(response.headers()).containsKey(HttpHeaders.CONTENT_TYPE);
-        assertThat(response.headers().get(HttpHeaders.CONTENT_TYPE).get(0)).isEqualTo(MediaType.APPLICATION_XML);
-        assertThat(response.headers()).doesNotContainKey(HttpHeaders.TRANSFER_ENCODING);
-        assertThat(response.headers()).containsKey(HttpHeaders.CONTENT_LENGTH);
+        HttpHeaders headers = response.headers();
+        assertThat(headers.contains(io.gravitee.common.http.HttpHeaders.CONTENT_TYPE)).isTrue();
+        assertThat(headers.get(io.gravitee.common.http.HttpHeaders.CONTENT_TYPE)).isEqualTo(MediaType.APPLICATION_XML);
+        assertThat(headers.contains(io.gravitee.common.http.HttpHeaders.TRANSFER_ENCODING)).isFalse();
+        assertThat(headers.contains(io.gravitee.common.http.HttpHeaders.CONTENT_LENGTH)).isTrue();
     }
 
     @Test
     @DisplayName("Should not transform when TransformationException thrown OnResponseContent")
-    public void shouldNotTransformAndAddHeadersOnResponseContent() throws Exception {
+    void shouldNotTransformAndAddHeadersOnResponseContent() throws Exception {
         String stylesheet = loadResource("/io/gravitee/policy/xslt/stylesheet_invalid.xsl");
         String xml = loadResource("/io/gravitee/policy/xslt/file01.xml");
 
         // Prepare context
-        when(xsltTransformationPolicyConfiguration.getStylesheet()).thenReturn(stylesheet);
-        when(xsltTransformationPolicyConfiguration.getScope()).thenReturn(PolicyScope.RESPONSE);
-        when(response.headers()).thenReturn(new HttpHeaders());
+        xsltTransformationPolicyConfiguration.setStylesheet(stylesheet);
+        xsltTransformationPolicyConfiguration.setScope(PolicyScope.RESPONSE);
+        HttpHeaders httpHeaders = HttpHeaders.create();
+        when(response.headers()).thenReturn(httpHeaders);
 
-        final ReadWriteStream result = xsltTransformationPolicy.onResponseContent(response, policyChain, executionContext);
+        final ReadWriteStream<Buffer> result = xsltTransformationPolicy.onResponseContent(response, policyChain, executionContext);
         assertThat(result).isNotNull();
 
         result.write(Buffer.buffer(xml));
         result.end();
 
-        assertThat(response.headers()).doesNotContainKey(HttpHeaders.CONTENT_TYPE);
-        assertThat(response.headers()).doesNotContainKey(HttpHeaders.TRANSFER_ENCODING);
-        assertThat(response.headers()).doesNotContainKey(HttpHeaders.CONTENT_LENGTH);
+        assertThat(response.headers().contains(io.gravitee.common.http.HttpHeaders.CONTENT_TYPE)).isFalse();
+        assertThat(response.headers().contains(io.gravitee.common.http.HttpHeaders.TRANSFER_ENCODING)).isFalse();
+        assertThat(response.headers().contains(io.gravitee.common.http.HttpHeaders.CONTENT_LENGTH)).isFalse();
         verify(policyChain, times(1)).streamFailWith(any());
     }
 
