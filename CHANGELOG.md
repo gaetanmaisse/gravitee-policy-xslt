@@ -1,3 +1,10 @@
+## [1.6.3](https://github.com/gravitee-io/gravitee-policy-xslt/compare/1.6.2...1.6.3) (2022-09-08)
+
+
+### Bug Fixes
+
+* upgrade all gravitee dependencies ([490e629](https://github.com/gravitee-io/gravitee-policy-xslt/commit/490e629f93beef3d658ed00843feead4ceb25da5))
+
 ## [1.6.2](https://github.com/gravitee-io/gravitee-policy-xslt/compare/1.6.1...1.6.2) (2022-08-30)
 
 
