@@ -1,0 +1,44 @@
+{
+  "id": "my-api",
+  "name": "my-api",
+  "gravitee": "2.0.0",
+  "proxy": {
+    "context_path": "/test",
+    "endpoints": [
+      {
+        "name": "default",
+        "target": "http://localhost:8080/endpoint",
+        "http": {
+          "connectTimeout": 3000,
+          "readTimeout": 60000
+        }
+      }
+    ]
+  },
+  "flows": [
+    {
+      "name": "flow-1",
+      "methods": [
+        "POST"
+      ],
+      "enabled": true,
+      "path-operator": {
+        "path": "/",
+        "operator": "STARTS_WITH"
+      },
+      "pre": [
+        {
+          "name": "XSLT Transformation",
+          "description": "",
+          "enabled": true,
+          "policy": "xslt",
+          "configuration": {
+            "stylesheet": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\">\n\n    <xsl:template match=\"/\">\n  <html>\n            <body>\n                <h2>My CD Collection</h2>\n                <table border=\"1\">\n                    <tr bgcolor=\"#9acd32\">\n                        <th style=\"text-align:left\">Title</th>\n                        <th style=\"text-align:left\">Artist</th>\n                    </tr>\n                    <xsl:for-each select=\"catalog/cd\">\n                        <tr>\n                            <td><xsl:value-of select=\"title\"/></td>\n                            <td><xsl:value-of select=\"artist\"/></td>\n                        </tr>\n                    </xsl:for-each>\n                </table>\n            </body>\n        </html>\n    </xsl:template>\n</xsl:stylesheet>\n\n",
+            "scope": "REQUEST"
+          }
+        }
+      ],
+      "post": []
+    }
+  ]
+}

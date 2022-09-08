@@ -156,6 +156,13 @@
             <version>2.1.1</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>io.gravitee.apim.gateway</groupId>
+            <artifactId>gravitee-apim-gateway-tests-sdk</artifactId>
+            <version>${gravitee-gateway.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

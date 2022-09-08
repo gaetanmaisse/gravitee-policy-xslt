@@ -1,0 +1,50 @@
+{
+  "id": "my-api",
+  "name": "my-api",
+  "gravitee": "2.0.0",
+  "proxy": {
+    "context_path": "/test",
+    "endpoints": [
+      {
+        "name": "default",
+        "target": "http://localhost:8080/endpoint",
+        "http": {
+          "connectTimeout": 3000,
+          "readTimeout": 60000
+        }
+      }
+    ]
+  },
+  "flows": [
+    {
+      "name": "flow-1",
+      "methods": [
+        "POST"
+      ],
+      "enabled": true,
+      "path-operator": {
+        "path": "/",
+        "operator": "STARTS_WITH"
+      },
+      "pre": [
+        {
+          "name": "XSLT Transformation",
+          "description": "",
+          "enabled": true,
+          "policy": "xslt",
+          "configuration": {
+            "stylesheet": "<?xml version=\"1.0\"?>\n\n<xsl:stylesheet version=\"1.0\"\nxmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\">\n  <xsl:param name=\"p\"/>\n\n<xsl:template match=\"/\">\n\n    <test><xsl:value-of select=\"$p\"/></test>\n\n</xsl:template>\n\n</xsl:stylesheet>",
+            "scope": "REQUEST",
+            "parameters": [
+              {
+                "name": "p",
+                "value": "{#request.headers['header-name'][0]}"
+              }
+            ]
+          }
+        }
+      ],
+      "post": []
+    }
+  ]
+}
