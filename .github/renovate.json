@@ -9,6 +9,13 @@
     {
       "matchDatasources": ["orb"],
       "rangeStrategy": "replace"
+    },
+    {
+      "matchDepTypes": ["test", "provided"],
+      "matchUpdateTypes": ["patch"],
+      "automerge": true,
+      "schedule": ["at any time"],
+      "semanticCommitType": "chore"
     }
   ]
 }
