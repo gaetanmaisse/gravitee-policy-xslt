@@ -14,6 +14,7 @@
       "matchDepTypes": ["provided"],
       "matchUpdateTypes": ["patch"],
       "automerge": true,
+      "platformAutomerge": true,
       "schedule": ["at any time"],
       "semanticCommitType": "chore"
     },
@@ -21,6 +22,7 @@
       "matchDepTypes": ["test"],
       "matchUpdateTypes": ["patch", "minor"],
       "automerge": true,
+      "platformAutomerge": true,
       "schedule": ["at any time"],
       "semanticCommitType": "chore"
     }
