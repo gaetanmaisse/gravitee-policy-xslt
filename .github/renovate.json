@@ -11,8 +11,15 @@
       "rangeStrategy": "replace"
     },
     {
-      "matchDepTypes": ["test", "provided"],
+      "matchDepTypes": ["provided"],
       "matchUpdateTypes": ["patch"],
+      "automerge": true,
+      "schedule": ["at any time"],
+      "semanticCommitType": "chore"
+    },
+    {
+      "matchDepTypes": ["test"],
+      "matchUpdateTypes": ["patch", "minor"],
       "automerge": true,
       "schedule": ["at any time"],
       "semanticCommitType": "chore"
