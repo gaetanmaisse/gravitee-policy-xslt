@@ -25,6 +25,14 @@
       "platformAutomerge": true,
       "schedule": ["at any time"],
       "semanticCommitType": "chore"
+    },
+    {
+      "matchDepTypes": ["build"],
+      "matchUpdateTypes": ["patch", "minor"],
+      "automerge": true,
+      "platformAutomerge": true,
+      "schedule": ["at any time"],
+      "semanticCommitType": "chore"
     }
   ]
 }
