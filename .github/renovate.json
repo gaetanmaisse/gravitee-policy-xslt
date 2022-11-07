@@ -12,7 +12,7 @@
     },
     {
       "matchDepTypes": ["provided"],
-      "matchUpdateTypes": ["patch"],
+      "matchUpdateTypes": ["patch", "minor"],
       "automerge": true,
       "platformAutomerge": true,
       "schedule": ["at any time"],
