@@ -1,3 +1,10 @@
+## [1.6.4](https://github.com/gravitee-io/gravitee-policy-xslt/compare/1.6.3...1.6.4) (2022-11-15)
+
+
+### Bug Fixes
+
+* disable access to external resources and functions for securization ([eaf081e](https://github.com/gravitee-io/gravitee-policy-xslt/commit/eaf081e734c7128f852239dd7321b65bbfc976ac))
+
 ## [1.6.3](https://github.com/gravitee-io/gravitee-policy-xslt/compare/1.6.2...1.6.3) (2022-09-08)
 
 
