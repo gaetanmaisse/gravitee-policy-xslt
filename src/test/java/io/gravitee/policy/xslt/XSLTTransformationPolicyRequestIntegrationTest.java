@@ -56,7 +56,7 @@ class XSLTTransformationPolicyRequestIntegrationTest extends AbstractXSLTTransfo
         wiremock.verify(
             postRequestedFor(urlPathEqualTo("/endpoint"))
                 .withHeader(HttpHeaderNames.CONTENT_TYPE, new EqualToPattern(MediaType.APPLICATION_XML))
-                .withHeader(HttpHeaderNames.CONTENT_LENGTH, new EqualToPattern("2790"))
+                .withHeader(HttpHeaderNames.CONTENT_LENGTH, new EqualToPattern("2805"))
                 .withoutHeader(HttpHeaderNames.TRANSFER_ENCODING)
                 .withRequestBody(equalTo(expectedResponse))
         );

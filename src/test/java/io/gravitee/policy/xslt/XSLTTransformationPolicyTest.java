@@ -137,6 +137,20 @@ public class XSLTTransformationPolicyTest {
         verify(templateEngine, times(2)).getValue(argThat(value -> value.equals("{#request.headers['test'][0]}")), eq(String.class));
     }
 
+    @Test
+    @DisplayName("Should throw exception when stylesheet contains access to filesystem")
+    public void shouldThrowExceptionForStylesheetThatAccessesFilesystem() throws Exception {
+        String stylesheet = loadResource("/io/gravitee/policy/xslt/stylesheet_filesystem_access.xsl");
+        String xml = loadResource("/io/gravitee/policy/xslt/file01.xml");
+
+        when(xsltTransformationPolicyConfiguration.getStylesheet()).thenReturn(stylesheet);
+
+        Assertions.assertThrows(
+            TransformationException.class,
+            () -> xsltTransformationPolicy.toXSLT(executionContext).apply(Buffer.buffer(xml))
+        );
+    }
+
     private String loadResource(String resource) throws IOException {
         InputStream is = this.getClass().getResourceAsStream(resource);
         StringWriter sw = new StringWriter();

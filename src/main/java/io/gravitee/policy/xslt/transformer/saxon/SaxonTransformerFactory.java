@@ -16,28 +16,29 @@
 package io.gravitee.policy.xslt.transformer.saxon;
 
 import javax.xml.XMLConstants;
-import javax.xml.transform.Source;
-import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
 import net.sf.saxon.TransformerFactoryImpl;
+import net.sf.saxon.lib.FeatureKeys;
 
 /**
  * @author David BRASSELY (david.brassely at graviteesource.com)
  * @author GraviteeSource Team
  */
+
 public class SaxonTransformerFactory extends TransformerFactoryImpl {
 
-    @Override
-    public Transformer newTransformer(Source arg0) throws TransformerConfigurationException {
-        this.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-        Transformer t = super.newTransformer(arg0);
-        return t;
+    public SaxonTransformerFactory() {
+        super();
+        enableSecureProcessing();
     }
 
-    @Override
-    public Transformer newTransformer() throws TransformerConfigurationException {
-        this.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-        Transformer t = super.newTransformer();
-        return t;
+    private void enableSecureProcessing() {
+        try {
+            this.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+            this.setAttribute(FeatureKeys.ALLOWED_PROTOCOLS, "");
+            this.setAttribute(FeatureKeys.ALLOW_EXTERNAL_FUNCTIONS, false);
+        } catch (TransformerConfigurationException e) {
+            throw new RuntimeException("Failed to enable SaxonTransformer security", e);
+        }
     }
 }
