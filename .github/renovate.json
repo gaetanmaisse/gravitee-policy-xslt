@@ -1,9 +1,7 @@
 {
   "extends": [
-    "config:base",
-    "schedule:earlyMondays"
+    "config:base"
   ],
-  "prConcurrentLimit": 3,
   "rebaseWhen": "conflicted",
   "packageRules": [
     {
@@ -11,43 +9,10 @@
       "rangeStrategy": "replace"
     },
     {
-      "matchDepTypes": ["provided"],
+      "matchDepTypes": ["provided", "test", "build", "import", "parent"],
       "matchUpdateTypes": ["patch", "minor"],
       "automerge": true,
-      "platformAutomerge": true,
-      "schedule": ["at any time"],
-      "semanticCommitType": "chore"
-    },
-    {
-      "matchDepTypes": ["test"],
-      "matchUpdateTypes": ["patch", "minor"],
-      "automerge": true,
-      "platformAutomerge": true,
-      "schedule": ["at any time"],
-      "semanticCommitType": "chore"
-    },
-    {
-      "matchDepTypes": ["build"],
-      "matchUpdateTypes": ["patch", "minor"],
-      "automerge": true,
-      "platformAutomerge": true,
-      "schedule": ["at any time"],
-      "semanticCommitType": "chore"
-    },
-    {
-      "matchDepTypes": ["import"],
-      "matchUpdateTypes": ["patch", "minor"],
-      "automerge": true,
-      "platformAutomerge": true,
-      "schedule": ["at any time"],
-      "semanticCommitType": "chore"
-    },
-    {
-      "matchDepTypes": ["parent"],
-      "matchUpdateTypes": ["patch", "minor"],
-      "automerge": true,
-      "platformAutomerge": true,
-      "schedule": ["at any time"],
+      "automergeType": "branch",
       "semanticCommitType": "chore"
     }
   ]
