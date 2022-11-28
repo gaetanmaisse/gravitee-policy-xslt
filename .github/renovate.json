@@ -6,6 +6,15 @@
   "packageRules": [
     {
       "matchDatasources": ["orb"],
+      "rangeStrategy": "replace",
+      "semanticCommitType": "ci"
+    },
+    {
+      "matchDatasources": ["orb"],
+      "matchUpdateTypes": ["patch", "minor"],
+      "automerge": true,
+      "automergeType": "branch",
+      "semanticCommitType": "ci"
       "rangeStrategy": "replace"
     },
     {
