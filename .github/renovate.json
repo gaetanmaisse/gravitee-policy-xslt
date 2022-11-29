@@ -14,7 +14,7 @@
       "matchUpdateTypes": ["patch", "minor"],
       "automerge": true,
       "automergeType": "branch",
-      "semanticCommitType": "ci"
+      "semanticCommitType": "ci",
       "rangeStrategy": "replace"
     },
     {
