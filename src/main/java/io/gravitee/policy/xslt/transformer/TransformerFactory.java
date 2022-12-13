@@ -15,15 +15,16 @@
  */
 package io.gravitee.policy.xslt.transformer;
 
+import io.gravitee.gateway.api.buffer.Buffer;
 import io.gravitee.policy.xslt.transformer.saxon.SaxonTransformerFactory;
+import io.gravitee.policy.xslt.utils.SAXSourceUtil;
 import io.gravitee.policy.xslt.utils.Sha1;
-import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Templates;
 import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.stream.StreamSource;
+import javax.xml.transform.sax.SAXSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,11 +37,18 @@ public final class TransformerFactory {
     private final Logger LOGGER = LoggerFactory.getLogger(TransformerFactory.class);
 
     private final Map<String, Templates> templateCache = new HashMap<>();
+    private boolean secureProcessing = true;
 
     private static TransformerFactory _instance = new TransformerFactory();
 
+
     public static TransformerFactory getInstance() {
         return _instance;
+    }
+
+    public TransformerFactory setSecureProcessing(boolean secureProcessing) {
+        this.secureProcessing = secureProcessing;
+        return this;
     }
 
     public Templates getTemplate(String xslt) throws Exception {
@@ -50,9 +58,10 @@ public final class TransformerFactory {
 
     private Templates createTemplate(String xslt) throws Exception {
         javax.xml.transform.TransformerFactory factory = getTransformerFactory();
-        StreamSource xslStream = new StreamSource(new StringReader(xslt));
+        SAXSource saxSource = SAXSourceUtil.createSAXSource(Buffer.buffer(xslt), secureProcessing);
+
         try {
-            Templates templates = factory.newTemplates(xslStream);
+            Templates templates = factory.newTemplates(saxSource);
             templates.getOutputProperties().setProperty(OutputKeys.INDENT, "yes");
             templates.getOutputProperties().setProperty("{http://xml.apache.org/xslt}indent-amount", "3");
             return templates;

@@ -26,8 +26,12 @@ or to the response body if your backend is exposing XML content.
 
 This policy is based on the https://sourceforge.net/projects/saxon/[Saxon^] library.
 
+By default, a DOCTYPE declaration will cause an error. This is for security.
+If you want to allow it, you can set `policy.xslt.secure-processing` to `false` in the Gateway configuration file (`gravitee.yml`).
+
 == Configuration
 
+=== Policy
 You can configure the policy with the following options:
 
 |===
@@ -67,6 +71,20 @@ You can configure the policy with the following options:
         }
     ]
 }
+----
+
+
+=== Gateway
+
+By default, a DOCTYPE declaration will cause an error. This is for security.
+If you want to allow it, you can set `policy.xslt.secure-processing` to `false` in the Gateway configuration file (`gravitee.yml`).
+
+[source, yaml]
+.Configuration
+----
+policy:
+  xslt:
+    secure-processing: false
 ----
 
 == Example

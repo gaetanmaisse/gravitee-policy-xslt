@@ -40,6 +40,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.env.Environment;
+import org.springframework.mock.env.MockEnvironment;
 import org.xmlunit.builder.DiffBuilder;
 import org.xmlunit.diff.Diff;
 
@@ -59,6 +61,8 @@ class XSLTTransformationPolicyTest {
 
     private TemplateEngine templateEngine;
 
+    private final MockEnvironment environment = new MockEnvironment();
+
     @BeforeEach
     public void init() {
         xsltTransformationPolicyConfiguration = new XSLTTransformationPolicyConfiguration();
@@ -66,6 +70,7 @@ class XSLTTransformationPolicyTest {
         templateEngine = mock(SpelTemplateEngine.class);
         when(templateEngine.convert(any())).thenAnswer(returnsFirstArg());
         when(executionContext.getTemplateEngine()).thenReturn(templateEngine);
+        when(executionContext.getComponent(Environment.class)).thenReturn(environment);
     }
 
     @Test
@@ -136,6 +141,20 @@ class XSLTTransformationPolicyTest {
     @DisplayName("Should throw exception when stylesheet contains access to filesystem")
     void shouldThrowExceptionForStylesheetThatAccessesFilesystem() throws Exception {
         String stylesheet = loadResource("/io/gravitee/policy/xslt/stylesheet_filesystem_access.xsl");
+        String xml = loadResource("/io/gravitee/policy/xslt/file01.xml");
+
+        xsltTransformationPolicyConfiguration.setStylesheet(stylesheet);
+
+        Assertions.assertThrows(
+            TransformationException.class,
+            () -> xsltTransformationPolicy.toXSLT(executionContext).apply(Buffer.buffer(xml))
+        );
+    }
+
+    @Test
+    @DisplayName("Should throw exception when stylesheet contains access to filesystem - 2")
+    void shouldThrowExceptionForStylesheetThatAccessesFilesystem2() throws Exception {
+        String stylesheet = loadResource("/io/gravitee/policy/xslt/stylesheet_filesystem_access2.xsl");
         String xml = loadResource("/io/gravitee/policy/xslt/file01.xml");
 
         xsltTransformationPolicyConfiguration.setStylesheet(stylesheet);

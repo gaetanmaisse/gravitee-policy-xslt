@@ -30,21 +30,15 @@ import io.gravitee.policy.api.annotations.OnResponseContent;
 import io.gravitee.policy.xslt.configuration.PolicyScope;
 import io.gravitee.policy.xslt.configuration.XSLTTransformationPolicyConfiguration;
 import io.gravitee.policy.xslt.transformer.TransformerFactory;
-import java.io.ByteArrayInputStream;
+import io.gravitee.policy.xslt.utils.SAXSourceUtil;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.function.Function;
-import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.Result;
 import javax.xml.transform.Templates;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
-import org.xml.sax.EntityResolver;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
+import org.springframework.core.env.Environment;
 
 /**
  * @author David BRASSELY (david.brassely at graviteesource.com)
@@ -56,6 +50,9 @@ public class XSLTTransformationPolicy {
      * XSLT transformation configuration
      */
     private final XSLTTransformationPolicyConfiguration xsltTransformationPolicyConfiguration;
+
+    private static final String XSLT_ENV_VAR_SECURE_PROCESSING = "policy.xslt.secure-processing";
+    public static final String SECURE_PROCESSING_DEFAULT_VALUE = "true";
 
     public XSLTTransformationPolicy(final XSLTTransformationPolicyConfiguration xsltTransformationPolicyConfiguration) {
         this.xsltTransformationPolicyConfiguration = xsltTransformationPolicyConfiguration;
@@ -93,21 +90,19 @@ public class XSLTTransformationPolicy {
     }
 
     public Function<Buffer, Buffer> toXSLT(ExecutionContext executionContext) {
+        Environment environment = executionContext.getComponent(Environment.class);
+        boolean secureProcessing = Boolean.parseBoolean(
+            environment.getProperty(XSLT_ENV_VAR_SECURE_PROCESSING, SECURE_PROCESSING_DEFAULT_VALUE)
+        );
+
         return input -> {
             try {
                 // Get XSL stylesheet and transform it using internal template engine
                 String stylesheet = executionContext.getTemplateEngine().convert(xsltTransformationPolicyConfiguration.getStylesheet());
 
-                Templates template = TransformerFactory.getInstance().getTemplate(stylesheet);
+                Templates template = TransformerFactory.getInstance().setSecureProcessing(secureProcessing).getTemplate(stylesheet);
 
-                SAXParserFactory spf = SAXParserFactory.newInstance();
-                spf.setNamespaceAware(true);
-                XMLReader r = spf.newSAXParser().getXMLReader();
-                EntityResolver er = new CustomResolver();
-                r.setEntityResolver(er);
-
-                InputStream xslInputStream = new ByteArrayInputStream(input.getBytes());
-                SAXSource saxSource = new SAXSource(r, new InputSource(xslInputStream));
+                SAXSource saxSource = SAXSourceUtil.createSAXSource(input, secureProcessing);
 
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 Result result = new StreamResult(baos);
@@ -135,12 +130,5 @@ public class XSLTTransformationPolicy {
                 throw new TransformationException("Unable to apply XSL Transformation: " + ex.getMessage(), ex);
             }
         };
-    }
-
-    class CustomResolver implements EntityResolver {
-
-        public InputSource resolveEntity(String publicId, String systemId) throws SAXException, IOException {
-            return new InputSource(); // Do not allow unknown entities, by returning blank path
-        }
     }
 }
