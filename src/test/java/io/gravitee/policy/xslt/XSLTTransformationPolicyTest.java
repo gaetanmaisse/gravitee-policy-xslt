@@ -16,13 +16,12 @@
 package io.gravitee.policy.xslt;
 
 import static java.util.Collections.singletonList;
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-import io.gravitee.el.TemplateContext;
 import io.gravitee.el.TemplateEngine;
 import io.gravitee.el.spel.SpelTemplateEngine;
 import io.gravitee.gateway.api.ExecutionContext;
@@ -49,11 +48,10 @@ import org.xmlunit.diff.Diff;
  * @author GraviteeSource Team
  */
 @ExtendWith(MockitoExtension.class)
-public class XSLTTransformationPolicyTest {
+class XSLTTransformationPolicyTest {
 
     private XSLTTransformationPolicy xsltTransformationPolicy;
 
-    @Mock
     private XSLTTransformationPolicyConfiguration xsltTransformationPolicyConfiguration;
 
     @Mock
@@ -63,6 +61,7 @@ public class XSLTTransformationPolicyTest {
 
     @BeforeEach
     public void init() {
+        xsltTransformationPolicyConfiguration = new XSLTTransformationPolicyConfiguration();
         xsltTransformationPolicy = new XSLTTransformationPolicy(xsltTransformationPolicyConfiguration);
         templateEngine = mock(SpelTemplateEngine.class);
         when(templateEngine.convert(any())).thenAnswer(returnsFirstArg());
@@ -71,13 +70,12 @@ public class XSLTTransformationPolicyTest {
 
     @Test
     @DisplayName("Should transform input")
-    public void shouldTransformInput() throws Exception {
+    void shouldTransformInput() throws Exception {
         String stylesheet = loadResource("/io/gravitee/policy/xslt/stylesheet01.xsl");
         String xml = loadResource("/io/gravitee/policy/xslt/file01.xml");
         String expected = loadResource("/io/gravitee/policy/xslt/output01.xml");
 
-        // Prepare context
-        when(xsltTransformationPolicyConfiguration.getStylesheet()).thenReturn(stylesheet);
+        xsltTransformationPolicyConfiguration.setStylesheet(stylesheet);
 
         Buffer ret = xsltTransformationPolicy.toXSLT(executionContext).apply(Buffer.buffer(xml));
         assertThat(ret).isNotNull();
@@ -88,12 +86,11 @@ public class XSLTTransformationPolicyTest {
 
     @Test
     @DisplayName("Should throw exception when stylesheet is invalid")
-    public void shouldThrowExceptionForInvalidStylesheet() throws Exception {
+    void shouldThrowExceptionForInvalidStylesheet() throws Exception {
         String stylesheet = loadResource("/io/gravitee/policy/xslt/stylesheet_invalid.xsl");
         String xml = loadResource("/io/gravitee/policy/xslt/file01.xml");
 
-        // Prepare context
-        when(xsltTransformationPolicyConfiguration.getStylesheet()).thenReturn(stylesheet);
+        xsltTransformationPolicyConfiguration.setStylesheet(stylesheet);
 
         Assertions.assertThrows(
             TransformationException.class,
@@ -107,8 +104,7 @@ public class XSLTTransformationPolicyTest {
         String stylesheet = loadResource("/io/gravitee/policy/xslt/stylesheet01.xsl");
         String xml = loadResource("/io/gravitee/policy/xslt/file02.xml");
 
-        // Prepare context
-        when(xsltTransformationPolicyConfiguration.getStylesheet()).thenReturn(stylesheet);
+        xsltTransformationPolicyConfiguration.setStylesheet(stylesheet);
 
         Assertions.assertThrows(
             TransformationException.class,
@@ -125,9 +121,8 @@ public class XSLTTransformationPolicyTest {
         XSLTParameter parameter = new XSLTParameter();
         parameter.setName("p");
         parameter.setValue("{#request.headers['test'][0]}");
-        // Prepare context
-        when(xsltTransformationPolicyConfiguration.getStylesheet()).thenReturn(stylesheet);
-        when(xsltTransformationPolicyConfiguration.getParameters()).thenReturn(singletonList(parameter));
+        xsltTransformationPolicyConfiguration.setStylesheet(stylesheet);
+        xsltTransformationPolicyConfiguration.setParameters(singletonList(parameter));
 
         when(templateEngine.getValue("{#request.headers['test'][0]}", String.class)).thenReturn("1");
 
@@ -139,11 +134,11 @@ public class XSLTTransformationPolicyTest {
 
     @Test
     @DisplayName("Should throw exception when stylesheet contains access to filesystem")
-    public void shouldThrowExceptionForStylesheetThatAccessesFilesystem() throws Exception {
+    void shouldThrowExceptionForStylesheetThatAccessesFilesystem() throws Exception {
         String stylesheet = loadResource("/io/gravitee/policy/xslt/stylesheet_filesystem_access.xsl");
         String xml = loadResource("/io/gravitee/policy/xslt/file01.xml");
 
-        when(xsltTransformationPolicyConfiguration.getStylesheet()).thenReturn(stylesheet);
+        xsltTransformationPolicyConfiguration.setStylesheet(stylesheet);
 
         Assertions.assertThrows(
             TransformationException.class,
