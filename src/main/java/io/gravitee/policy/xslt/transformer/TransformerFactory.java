@@ -34,13 +34,12 @@ import org.slf4j.LoggerFactory;
  */
 public final class TransformerFactory {
 
-    private final Logger LOGGER = LoggerFactory.getLogger(TransformerFactory.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TransformerFactory.class);
 
     private final Map<String, Templates> templateCache = new HashMap<>();
     private boolean secureProcessing = true;
 
-    private static TransformerFactory _instance = new TransformerFactory();
-
+    private static final TransformerFactory _instance = new TransformerFactory();
 
     public static TransformerFactory getInstance() {
         return _instance;
@@ -51,9 +50,18 @@ public final class TransformerFactory {
         return this;
     }
 
-    public Templates getTemplate(String xslt) throws Exception {
+    public Templates getTemplate(String xslt) {
         String sha1 = Sha1.sha1(xslt);
-        return templateCache.getOrDefault(sha1, createTemplate(xslt));
+        return templateCache.computeIfAbsent(
+            sha1,
+            key -> {
+                try {
+                    return createTemplate(xslt);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        );
     }
 
     private Templates createTemplate(String xslt) throws Exception {
