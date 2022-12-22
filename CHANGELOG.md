@@ -1,3 +1,18 @@
+# [2.0.0](https://github.com/gravitee-io/gravitee-policy-xslt/compare/1.6.4...2.0.0) (2022-12-22)
+
+
+### Bug Fixes
+
+* disallow DocType declaration to prevent XML entity attacks ([c7ff66e](https://github.com/gravitee-io/gravitee-policy-xslt/commit/c7ff66e06f7b651d8fd6f08d67f7355cd060e1a9))
+* put template in cache instead of recomputing it for each call ([fd02e99](https://github.com/gravitee-io/gravitee-policy-xslt/commit/fd02e99212ec916b97ab6211f43ecf2312b1e2b7))
+
+
+### BREAKING CHANGES
+
+* This policy now has a secure processing by default.
+To keep the previous behavior you need to explicitly deactivate the secure processing.
+To do so you need to set `policy.xslt.secure-processing: false` in your Gateway's `gravitee.yml`.
+
 ## [1.6.4](https://github.com/gravitee-io/gravitee-policy-xslt/compare/1.6.3...1.6.4) (2022-11-15)
 
 
