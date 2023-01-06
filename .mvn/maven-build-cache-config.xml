@@ -1,0 +1,20 @@
+<cache xmlns="http://maven.apache.org/BUILD-CACHE-CONFIG/1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://maven.apache.org/BUILD-CACHE-CONFIG/1.0.0 https://maven.apache.org/xsd/build-cache-config-1.0.0.xsd">
+    <configuration>
+<!--        <enabled/>-->
+<!--        <hashAlgorithm/>-->
+<!--        <validateXml/>-->
+<!--        <multiModule>-->
+<!--            <discovery>-->
+<!--                <scanProfiles/>-->
+<!--            </discovery>-->
+<!--        </multiModule>-->
+        <remote enabled="true">
+<!--            <url>http://localhost:1900</url>-->
+            <url>https://simple-webdav.cleverapps.io</url>
+        </remote>
+<!--        <local>-->
+<!--        </local>-->
+<!--        <debugs/>-->
+    </configuration>
+</cache>
